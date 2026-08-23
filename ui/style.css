@@ -1,4 +1,8 @@
-
+.maindiv{
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
 .mainnavbar{
     display: flex;
     gap: 0px;
@@ -47,4 +51,38 @@
     border: none;
     font-family: 'Poppins', sans-serif;
     font-size: 19px;
+}
+.main{
+    display: flex;
+    gap: 5px;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+.toolbar{
+    flex: 1;
+    border: 5px solid black;
+}
+.toolbar-item{
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    margin: 10px;
+}
+.toolbar-item button{
+    min-width: 60px;
+    min-height: 50px;
+    border: 2px solid #181727;
+    border-radius: 10px;
+}
+.brushes{
+   display: flex;
+   gap : 10px; 
+}
+.brushes h1{
+    font-size: 20px;
+}
+.canvas{
+    flex: 7;
+    border: 5px solid black;
+    min-height: 830px;
 }
