@@ -26,24 +26,24 @@
                 <div class="toolbar-item">
                     <div class="brushes">
                         <div class="row">
-                            <div class="pencil">
+                            <div class="pencil" id="pencil">
                                 <button><img src="/resources/pencil.png" alt="Pencil"></button>
                             </div>
-                            <div class="eraser">
+                            <div class="eraser" id="eraser">
                                 <button><img src="/resources/eraser.png" alt="Eraser"></button>
                             </div>
-                            <div class="highlighter">
+                            <div class="highlighter" id="highlighter">
                                 <button><img src="/resources/highlighter.png" alt="Highlighter"></button>
                             </div>
                         </div>
                         <div class="row">
-                            <div class="trash">
+                            <div class="trash" id="trash">
                                 <button><img src="/resources/trash.png" alt="Clear All"></button>
                             </div>
-                            <div class="paint-bucket">
+                            <div class="paint-bucket" id="paint-bucket">
                                 <button><img src="/resources/paint-bucket.png" alt="Paint Bucket"></button>
                             </div>
-                            <div class="select">
+                            <div class="select" id="select">
                                 <button><img src="/resources/pointer.png" alt="Pointer"></button>
                             </div>
                         </div>
@@ -74,10 +74,11 @@
                     </div>
                 </div>
             </div>
-            <div class="canvas">
-                <h1>Canvas</h1>
+            <div class="canvas" id="canvas">
+                <canvas id="drawingCanvas" width="1265" height="855"></canvas>
             </div>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>

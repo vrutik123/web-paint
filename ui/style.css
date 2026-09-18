@@ -76,7 +76,9 @@
 }
 .toolbar{
     flex: 1;
-    border: 5px solid black;
+    border: 3px solid black;
+    border-radius: 20px;
+    background-color:rgba(0, 0, 0, 0.1);
 }
 .toolbar-item{
     padding-top: 10px;
@@ -96,7 +98,7 @@
 
 }
 .toolbar-item button:hover{
-    cursor: pointer;
+   
     margin-top: -8px;
     background-color:  #d9d6f1;
     border-radius: 13px;
@@ -104,6 +106,42 @@
     scale: 1.2;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.40); 
     transition: 0.5s;
+}
+.pencil button:hover{
+    cursor: url('/resources/pencil.png'), auto;
+}
+.eraser button:hover{
+    cursor: url('/resources/eraser.png'), auto;
+}
+.highlighter button:hover{
+    cursor: url('/resources/highlighter.png'), auto;
+}
+.trash button:hover{
+    cursor: url('/resources/trash.png'), auto;
+}
+.paint-bucket button:hover{
+    cursor: url('/resources/paint-bucket.png'), auto;
+}
+.select button:hover{
+    cursor: pointer;
+}
+.circle button:hover{
+    cursor: url('/resources/circle.png'), auto;
+}
+.square button:hover{
+    cursor: url('/resources/square.png'), auto;
+}
+.triangle button:hover{
+    cursor: url('/resources/triangle.png'), auto;
+}
+.rectangle button:hover{
+    cursor: url('/resources/rectangle-horizontal.png'), auto;
+}
+.brain button:hover{
+    cursor: url('/resources/brain.png'), auto;
+}
+.pentagon button:hover{
+    cursor: url('/resources/pentagon.png'), auto;
 }
 .brushes{
    display: flex;
@@ -126,7 +164,8 @@
 }
 .canvas{
     flex: 7;
-    border: 5px solid black;
+    border: 3px solid black;
+    border-radius: 20px;
     min-height: 830px;
 }
 .pencil, .trash, .paint-bucket, .eraser, .highlighter, .select, .circle, .square, .triangle, .rectangle, .pentagon, .brain{
