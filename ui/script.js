@@ -25,11 +25,11 @@ function registerTool(toolId, toolName, cursorValue) {
     });
 }
 
-registerTool("pencil", "pencil", "url(/resources/pencil.png), auto");
-registerTool("eraser", "eraser", "url(/resources/eraser.png), auto");
-registerTool("paint-bucket", "paintBucket", "url(/resources/paint-bucket.png), auto");
-registerTool("highlighter", "highlighter", "url(/resources/highlighter.png), auto");
-registerTool("magic", "magic", "url(/resources/megical_pencil.png), auto");
+registerTool("pencil", "pencil", "url(../resources/pencil.png), auto");
+registerTool("eraser", "eraser", "url(../resources/eraser.png), auto");
+registerTool("paint-bucket", "paintBucket", "url(../resources/paint-bucket.png), auto");
+registerTool("highlighter", "highlighter", "url(../resources/highlighter.png), auto");
+registerTool("magic", "magic", "url(../resources/megical_pencil.png), auto");
 registerTool("square", "square", "crosshair");
 registerTool("circle", "circle", "crosshair");
 registerTool("triangle", "triangle", "crosshair");
