@@ -3,82 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A simple browser-based paint application.">
     <link rel="stylesheet" href="style.css">
-    <title>Document</title>
+    <title>Web Paint</title>
 </head>
 <body>
-    <div class="maindiv">
-        <div class="mainnavbar">
-            <div class="logo">
-                <img src="/resources/tmp_logo_3.png" alt="Logo">
-            </div>
-            <div class="navbar">
-                <ul>
-                    <li><button>File</button></li>
-                    <li><button>Edit</button></li>
-                    <li><button>View</button></li>
-                    <li><button>Help</button></li>
+    <div class="app-shell">
+        <header class="mainnavbar">
+            <a class="brand" href="index.html" aria-label="Web Paint home">
+                <img src="/resources/tmp_logo_3.png" alt="Web Paint logo">
+                <span>Web Paint</span>
+            </a>
+
+            <nav class="navbar" aria-label="Drawing settings">
+                <ul class="settings-list">
+                    <li>
+                        <div class="color-options" aria-label="Choose color">
+                            <label class="color-choice" style="background: black;">
+                                <input class="color-radio" type="radio" name="color" value="black" checked>
+                            </label>
+                            <label class="color-choice" style="background: red;">
+                                <input class="color-radio" type="radio" name="color" value="red">
+                            </label>
+                            <label class="color-choice" style="background: blue;">
+                                <input class="color-radio" type="radio" name="color" value="blue">
+                            </label>
+                            <label class="color-choice" style="background: green;">
+                                <input class="color-radio" type="radio" name="color" value="green">
+                            </label>
+                            <label class="color-choice" style="background: yellow;">
+                                <input class="color-radio" type="radio" name="color" value="yellow">
+                            </label>
+                            <label class="color-choice" style="background: orange;">
+                                <input class="color-radio" type="radio" name="color" value="orange">
+                            </label>
+                            <label class="color-choice" style="background: purple;">
+                                <input class="color-radio" type="radio" name="color" value="purple">
+                            </label>
+                            <label class="color-choice" style="background: white;">
+                                <input class="color-radio" type="radio" name="color" value="white">
+                            </label>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="setting-label">
+                            <span class="stroke-swatch" aria-hidden="true" id="stroke-swatch"></span>
+                            <span>Width <output id="width-value">2 px</output></span>
+                        </div>
+                        <div class="stroke-options" aria-label="Set stroke width">
+                            <input id="width-slider" type="range" min="1" max="30" value="2">
+                        </div>
+                    </li>
+                    <li>
+                        <div class="setting-label">
+                            <span class="setting-icon transparency-icon" aria-hidden="true">◐</span>
+                            <span>Opacity <output id="opacity-value">100%</output></span>
+                        </div>
+                        <div class="opacity-options" aria-label="Set opacity">
+                            <input id="opacity-slider" type="range" min="0" max="100" value="100">
+                        </div>
+                    </li>
                 </ul>
-            </div>
-        </div>
-        <div class="main">
-            <div class="toolbar">
-                <div class="toolbar-item">
-                    <div class="brushes">
-                        <div class="row">
-                            <div class="pencil" id="pencil">
-                                <button><img src="/resources/pencil.png" alt="Pencil"></button>
-                            </div>
-                            <div class="eraser" id="eraser">
-                                <button><img src="/resources/eraser.png" alt="Eraser"></button>
-                            </div>
-                            <div class="highlighter" id="highlighter">
-                                <button><img src="/resources/highlighter.png" alt="Highlighter"></button>
-                            </div>
+            </nav>
+        </header>
+
+        <main class="workspace">
+            <aside class="toolbar" aria-label="Drawing tools">
+                <section class="tool-group" aria-labelledby="brush-tools-title">
+                    <h2 id="brush-tools-title">Tools</h2>
+                    <div class="tool-grid">
+                        <div class="tool pencil" id="pencil">
+                            <button type="button" title="Pencil" aria-label="Pencil">
+                                <img src="/resources/pencil.png" alt="">
+                            </button>
                         </div>
-                        <div class="row">
-                            <div class="trash" id="trash">
-                                <button><img src="/resources/trash.png" alt="Clear All"></button>
-                            </div>
-                            <div class="paint-bucket" id="paint-bucket">
-                                <button><img src="/resources/paint-bucket.png" alt="Paint Bucket"></button>
-                            </div>
-                            <div class="select" id="select">
-                                <button><img src="/resources/pointer.png" alt="Pointer"></button>
-                            </div>
+                        <div class="tool eraser" id="eraser">
+                            <button type="button" title="Eraser" aria-label="Eraser">
+                                <img src="/resources/eraser.png" alt="">
+                            </button>
                         </div>
-                    </div>
-                    <div class="shapes">
-                        <div class="row">
-                            <div class="circle">
-                                <button><img src="/resources/circle.png" alt="Circle"></button>
-                            </div>
-                            <div class="square">
-                                <button><img src="/resources/square.png" alt="Square"></button>
-                            </div>
-                            <div class="triangle">
-                                <button><img src="/resources/triangle.png" alt="Triangle"></button>
-                            </div>
+                        <div class="tool highlighter" id="highlighter">
+                            <button type="button" title="Highlighter" aria-label="Highlighter">
+                                <img src="/resources/highlighter.png" alt="">
+                            </button>
                         </div>
-                        <div class="row">
-                            <div class="rectangle">
-                                <button><img src="/resources/rectangle-horizontal.png" alt="Rectangle"></button>
-                            </div>
-                            <div class="pentagon">
-                                <button><img src="/resources/pentagon.png" alt="Pentagon"></button>
-                            </div>
-                            <div class="brain">
-                                <button><img src="/resources/brain.png" alt="Brain"></button>
-                            </div>
+                        <div class="tool trash" id="trash">
+                            <button type="button" title="Clear canvas" aria-label="Clear canvas">
+                                <img src="/resources/trash.png" alt="">
+                            </button>
+                        </div>
+                        <div class="tool paint-bucket" id="paint-bucket">
+                            <button type="button" title="Paint bucket" aria-label="Paint bucket">
+                                <img src="/resources/paint-bucket.png" alt="">
+                            </button>
+                        </div>
+                        <div class="tool select" id="magic">
+                            <button type="button" title="Select" aria-label="Select">
+                                <img src="/resources/megical_pencil.png" alt="">
+                            </button>
                         </div>
                     </div>
+                </section>
+
+                <section class="tool-group" aria-labelledby="shape-tools-title">
+                    <h2 id="shape-tools-title">Shapes</h2>
+                    <div class="tool-grid">
+                        <div class="tool circle" id="circle">
+                            <button type="button" title="Circle" aria-label="Circle">
+                                <img src="/resources/circle.png" alt="">
+                            </button>
+                        </div>
+                        <div class="tool square" id="square">
+                            <button type="button" title="Square" aria-label="Square">
+                                <img src="/resources/square.png" alt="">
+                            </button>
+                        </div>
+                        <div class="tool triangle" id="triangle">
+                            <button type="button" title="Triangle" aria-label="Triangle">
+                                <img src="/resources/triangle.png" alt="">
+                            </button>
+                        </div>
+                        <div class="tool rectangle" id="rectangle">
+                            <button type="button" title="Rectangle" aria-label="Rectangle">
+                                <img src="/resources/rectangle-horizontal.png" alt="">
+                            </button>
+                        </div>
+                        <div class="tool pentagon" id="pentagon">
+                            <button type="button" title="Pentagon" aria-label="Pentagon">
+                                <img src="/resources/pentagon.png" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+
+            <section class="canvas-panel" aria-label="Drawing canvas">
+                <div class="canvas" id="canvas">
+                    <canvas id="drawingCanvas" width="1750" height="840"></canvas>
+                    <canvas id="previewCanvas" width="1750" height="840"></canvas>
                 </div>
-            </div>
-            <div class="canvas" id="canvas">
-                <canvas id="drawingCanvas" width="1265" height="855"></canvas>
-            </div>
-        </div>
+            </section>
+        </main>
     </div>
+    <script src="dollarRecognizer.js"></script>
+    <script src="canvas-utils.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

@@ -1,185 +1,496 @@
-const canvas = document.getElementById('drawingCanvas');
-
+const canvas = document.getElementById("drawingCanvas");
+const previewCanvas = document.getElementById("previewCanvas");
+const drawingContext = canvas.getContext("2d");
+const previewContext = previewCanvas.getContext("2d");
+let setcolor = "black";
+let strokeWidth = 2;
+let opacity = 1;
 let currentTool = null;
 let x = 0;
 let y = 0;
 let isDrawing = false;
+let flag = false;
+let magicPoints = [];
 
-
-// ================= PENCIL =================
-
-const pencil = document.getElementById('pencil');
-
-pencil.addEventListener('click', () => {
-    currentTool = 'pencil';
-
-    document.body.style.cursor =
-        'url(/resources/pencil.png), auto';
-
+function setActiveTool(toolName, cursorValue) {
+    currentTool = toolName;
+    document.body.style.cursor = cursorValue;
     isDrawing = false;
+}
+
+function registerTool(toolId, toolName, cursorValue) {
+    const element = document.getElementById(toolId);
+    element.addEventListener("click", () => {
+        setActiveTool(toolName, cursorValue);
+    });
+}
+
+registerTool("pencil", "pencil", "url(/resources/pencil.png), auto");
+registerTool("eraser", "eraser", "url(/resources/eraser.png), auto");
+registerTool("paint-bucket", "paintBucket", "url(/resources/paint-bucket.png), auto");
+registerTool("highlighter", "highlighter", "url(/resources/highlighter.png), auto");
+registerTool("magic", "magic", "url(/resources/megical_pencil.png), auto");
+registerTool("square", "square", "crosshair");
+registerTool("circle", "circle", "crosshair");
+registerTool("triangle", "triangle", "crosshair");
+registerTool("rectangle", "rectangle", "crosshair");
+registerTool("pentagon", "pentagon", "crosshair");
+
+document.querySelectorAll(".color-radio").forEach((input) => {
+    input.addEventListener("change", () => {
+        setcolor = input.value;
+        document.getElementById("color-swatch").style.backgroundColor = setcolor;
+    });
 });
 
-
-// ================= ERASER =================
-
-const eraser = document.getElementById('eraser');
-
-eraser.addEventListener('click', () => {
-    currentTool = 'eraser';
-
-    document.body.style.cursor =
-        'url(/resources/eraser.png), auto';
-
-    isDrawing = false;
+const widthSlider = document.getElementById("width-slider");
+const widthValue = document.getElementById("width-value");
+widthSlider.addEventListener("input", () => {
+    strokeWidth = Number(widthSlider.value);
+    widthValue.textContent = `${strokeWidth} px`;
 });
 
-
-// ================= TRASH =================
-
-const trash = document.getElementById('trash');
-
-trash.addEventListener('click', () => {
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    isDrawing = false;
+const opacitySlider = document.getElementById("opacity-slider");
+const opacityValue = document.getElementById("opacity-value");
+opacitySlider.addEventListener("input", () => {
+    opacity = Number(opacitySlider.value) / 100;
+    opacityValue.textContent = `${opacitySlider.value}%`;
 });
 
-
-// ================= PAINT BUCKET =================
-
-const paintBucket = document.getElementById('paint-bucket');
-
-paintBucket.addEventListener('click', () => {
-    currentTool = 'paintBucket';
-
-    document.body.style.cursor =
-        'url(/resources/paint-bucket.png), auto';
-
+const trash = document.getElementById("trash");
+trash.addEventListener("click", () => {
+    CanvasUtils.clearCanvasLayer(canvas);
     isDrawing = false;
 });
+function floodFill(startX, startY, color) {
 
+    const imageData = drawingContext.getImageData(
+        0, 0, canvas.width, canvas.height
+    );
 
-// ================= HIGHLIGHTER =================
+    const data = imageData.data;
+    const width = canvas.width;
+    const height = canvas.height;
 
-const highlighter = document.getElementById('highlighter');
+    const startPos = (startY * width + startX) * 4;
 
-highlighter.addEventListener('click', () => {
-    currentTool = 'highlighter';
+    const targetR = data[startPos];
+    const targetG = data[startPos + 1];
+    const targetB = data[startPos + 2];
+    const targetA = data[startPos + 3];
 
-    document.body.style.cursor =
-        'url(/resources/highlighter.png), auto';
+    // Convert selected CSS color into RGBA
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = 1;
+    tempCanvas.height = 1;
 
-    isDrawing = false;
-});
+    const tempContext = tempCanvas.getContext("2d");
+    tempContext.fillStyle = color;
+    tempContext.fillRect(0, 0, 1, 1);
 
+    const fillData = tempContext.getImageData(0, 0, 1, 1).data;
 
-// ================= SELECT =================
+    const fillR = fillData[0];
+    const fillG = fillData[1];
+    const fillB = fillData[2];
+    const fillA = Math.round(fillData[3] * opacity);
 
-const select = document.getElementById('select');
+    // Same color? No need to fill
+    if (
+        targetR === fillR &&
+        targetG === fillG &&
+        targetB === fillB &&
+        targetA === fillA
+    ) {
+        return;
+    }
 
-select.addEventListener('click', () => {
-    currentTool = 'select';
+    const stack = [[startX, startY]];
 
-    document.body.style.cursor = 'pointer';
+    while (stack.length > 0) {
 
-    isDrawing = false;
-});
+        const [x, y] = stack.pop();
 
+        if (
+            x < 0 || x >= width ||
+            y < 0 || y >= height
+        ) {
+            continue;
+        }
 
-// ================= CANVAS MOUSEMOVE =================
+        const pos = (y * width + x) * 4;
 
-canvas.addEventListener('mousemove', (event) => {
+        if (
+            data[pos] !== targetR ||
+            data[pos + 1] !== targetG ||
+            data[pos + 2] !== targetB ||
+            data[pos + 3] !== targetA
+        ) {
+            continue;
+        }
 
-    // Only pencil code runs when pencil is selected
-    if (currentTool === 'pencil' && event.buttons === 1) {
+        data[pos] = fillR;
+        data[pos + 1] = fillG;
+        data[pos + 2] = fillB;
+        data[pos + 3] = fillA;
 
+        stack.push([x + 1, y]);
+        stack.push([x - 1, y]);
+        stack.push([x, y + 1]);
+        stack.push([x, y - 1]);
+    }
+
+    drawingContext.putImageData(imageData, 0, 0);
+}
+function drawRecognizedShape(shape, points) {
+
+    const xs = points.map(p => p.X);
+    const ys = points.map(p => p.Y);
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    drawingContext.save();
+
+    drawingContext.beginPath();
+    drawingContext.strokeStyle = setcolor;
+    drawingContext.lineWidth = strokeWidth;
+    drawingContext.globalAlpha = opacity;
+    drawingContext.lineCap = "round";
+    drawingContext.lineJoin = "round";
+
+    if (shape.toLowerCase() === "circle") {
+
+        const radius = Math.min(maxX - minX, maxY - minY) / 2;
+
+        drawingContext.arc(
+            centerX,
+            centerY,
+            radius,
+            0,
+            Math.PI * 2
+        );
+
+        drawingContext.stroke();
+
+    } else if (shape.toLowerCase() === "rectangle") {
+
+        drawingContext.strokeRect(
+            minX,
+            minY,
+            maxX - minX,
+            maxY - minY
+        );
+
+    } else if (shape.toLowerCase() === "square") {
+
+        const size = Math.min(maxX - minX, maxY - minY);
+
+        drawingContext.strokeRect(
+            centerX - size / 2,
+            centerY - size / 2,
+            size,
+            size
+        );
+
+    } else if (shape.toLowerCase() === "triangle") {
+
+        drawingContext.moveTo(centerX, minY);
+        drawingContext.lineTo(maxX, maxY);
+        drawingContext.lineTo(minX, maxY);
+        drawingContext.closePath();
+
+        drawingContext.stroke();
+
+    } else if (shape.toLowerCase() === "line") {
+
+        drawingContext.moveTo(
+            points[0].X,
+            points[0].Y
+        );
+
+        drawingContext.lineTo(
+            points[points.length - 1].X,
+            points[points.length - 1].Y
+        );
+
+        drawingContext.stroke();
+    }
+
+    drawingContext.restore();
+}
+canvas.addEventListener("mousemove", (event) => {
+    const point = CanvasUtils.getCanvasPoint(event, canvas);
+    const currentX = point.x;
+    const currentY = point.y;
+
+    if (currentTool === "pencil" && event.buttons === 1) {
         if (!isDrawing) {
-            x = event.clientX - canvas.offsetLeft;
-            y = event.clientY - canvas.offsetTop + 27;
-
+            x = currentX;
+            y = currentY + 27;
             isDrawing = true;
         }
 
-        console.log(
-            'Drawing with pencil at',
-            event.clientX,
-            event.clientY
-        );
+        console.log("Drawing with pencil at", event.clientX, event.clientY);
 
-        const ctx = canvas.getContext('2d');
-
-        ctx.beginPath();
-         ctx.lineWidth = 1;
-        ctx.strokeStyle =  'black';
-        ctx.moveTo(x, y);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.lineTo(
-            event.clientX - canvas.offsetLeft,
-            event.clientY - canvas.offsetTop + 27
-        );
-
-        x = event.clientX - canvas.offsetLeft;
-        y = event.clientY - canvas.offsetTop + 27;
-
-        ctx.stroke();
+        drawingContext.beginPath();
+        drawingContext.strokeStyle = setcolor;
+        drawingContext.lineWidth = strokeWidth;
+        drawingContext.globalAlpha = opacity;
+        drawingContext.moveTo(x, y);
+        drawingContext.lineCap = "round";
+        drawingContext.lineJoin = "round";
+        drawingContext.lineTo(currentX, currentY + 27);
+        x = currentX;
+        y = currentY + 27;
+        drawingContext.stroke();
     }
 
-    // Mouse button released
+    if (event.buttons !== 1) {
+        isDrawing = false;
+    }
+    if (currentTool === "magic" && event.buttons === 1) {
+        if (!isDrawing) {
+            x = currentX;
+            y = currentY;
+            isDrawing = true;
+        }
+        magicPoints.push({
+            X: currentX,
+            Y: currentY + 27
+        });
+
+        previewContext.beginPath();
+        previewContext.strokeStyle = setcolor;
+        previewContext.lineWidth = strokeWidth;
+        previewContext.globalAlpha = opacity;
+        previewContext.moveTo(x, y);
+        previewContext.lineCap = "round";
+        previewContext.lineJoin = "round";
+        previewContext.lineTo(currentX, currentY + 27);
+
+        x = currentX;
+        y = currentY + 27;
+
+        previewContext.stroke();
+
+        flag = true;
+    }
+
+    if (event.buttons !== 1 && currentTool === "magic" && flag) {
+
+        isDrawing = false;
+        const result = CanvasUtils.recognizeShape(magicPoints);
+        console.log("Recognized shape:", result ? result.shape : "None");
+        console.log("Confidence:", result ? result.score : 0);
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+
+        if (result && result.score >= 0.65) {
+
+            drawRecognizedShape(result.shape, magicPoints);
+
+        } else {
+
+            console.log("Shape not recognized");
+        }
+        magicPoints = [];
+        flag = false;
+    }
+
+    if (currentTool === "eraser" && event.buttons === 1) {
+        drawingContext.clearRect(currentX - strokeWidth, currentY - strokeWidth, strokeWidth * 2, strokeWidth * 2);
+    }
+
+    if (currentTool === "highlighter" && event.buttons === 1) {
+        if (!isDrawing) {
+            x = currentX;
+            y = currentY + 27;
+            isDrawing = true;
+        }
+
+        console.log("Drawing with highlighter at", event.clientX, event.clientY);
+
+        drawingContext.beginPath();
+        drawingContext.lineWidth = strokeWidth;
+        drawingContext.strokeStyle = setcolor;
+        drawingContext.globalAlpha = opacity;
+        drawingContext.moveTo(x, y);
+        drawingContext.lineCap = "round";
+        drawingContext.lineJoin = "round";
+        drawingContext.lineTo(currentX, currentY + 27);
+        x = currentX;
+        y = currentY + 27;
+        drawingContext.stroke();
+    }
+
     if (event.buttons !== 1) {
         isDrawing = false;
     }
 
-    // Only eraser code runs when eraser is selected
-    if (currentTool === 'eraser' && event.buttons === 1) {
-        ctx = canvas.getContext('2d');
-        ctx.clearRect(event.clientX - canvas.offsetLeft-10, event.clientY - canvas.offsetTop-10, 50, 50);
-    }
-
-
-
-
-    // Only highlighter code runs when highlighter is selected
-    if (currentTool === 'highlighter' && event.buttons === 1) {
-
+    if (currentTool === "square" && event.buttons === 1) {
         if (!isDrawing) {
-            x = event.clientX - canvas.offsetLeft;
-            y = event.clientY - canvas.offsetTop + 27;
-
+            x = currentX;
+            y = currentY;
             isDrawing = true;
         }
-        console.log(
-            'Drawing with pencil at',
-            event.clientX,
-            event.clientY
-        );
 
-        const ctx = canvas.getContext('2d');
-
-        ctx.beginPath();
-        ctx.lineWidth = 50;
-        ctx.strokeStyle = 'rgba(255, 255, 0, 0.09)'; // Yellow color with transparency
-        ctx.moveTo(x, y);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.lineTo(
-            event.clientX - canvas.offsetLeft,
-            event.clientY - canvas.offsetTop + 27
-        );
-
-        x = event.clientX - canvas.offsetLeft;
-        y = event.clientY - canvas.offsetTop + 27;
-
-        ctx.stroke();
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        previewContext.lineWidth = strokeWidth;
+        previewContext.strokeStyle = setcolor;
+        previewContext.globalAlpha = opacity;
+        const max = Math.max(currentX - x, currentY - y);
+        previewContext.strokeRect(x, y, max, max);
+        flag = true;
     }
 
-    // Mouse button released
-    if (event.buttons !== 1) {
+    if (event.buttons !== 1 && currentTool === "square" && flag) {
         isDrawing = false;
+        drawingContext.lineWidth = strokeWidth;
+        drawingContext.strokeStyle = setcolor;
+        drawingContext.globalAlpha = opacity;
+        const max = Math.max(currentX - x, currentY - y);
+        drawingContext.strokeRect(x, y, max, max);
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        console.log("Square drawn from", x, y, "to", event.clientX, event.clientY);
+        flag = false;
     }
 
+    if (currentTool === "circle" && event.buttons === 1) {
+        if (!isDrawing) {
+            x = currentX;
+            y = currentY;
+            isDrawing = true;
+        }
 
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        previewContext.lineWidth = strokeWidth;
+        previewContext.beginPath();
+        previewContext.strokeStyle = setcolor;
+        previewContext.globalAlpha = opacity;
+        previewContext.arc(x, y, CanvasUtils.getDistance(x, y, currentX, currentY), 0, Math.PI * 2);
+        previewContext.stroke();
+        flag = true;
+    }
 
-   
+    if (event.buttons !== 1 && currentTool === "circle" && flag) {
+        isDrawing = false;
+        drawingContext.beginPath();
+        drawingContext.lineWidth = strokeWidth;
+        drawingContext.strokeStyle = setcolor;
+        drawingContext.globalAlpha = opacity;
+        drawingContext.arc(x, y, CanvasUtils.getDistance(x, y, currentX, currentY), 0, Math.PI * 2);
+        drawingContext.stroke();
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        console.log("Circle drawn from", x, y, "to", event.clientX, event.clientY);
+        flag = false;
+    }
+
+    if (currentTool === "triangle" && event.buttons === 1) {
+        if (!isDrawing) {
+            x = currentX;
+            y = currentY;
+            isDrawing = true;
+        }
+
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        previewContext.lineWidth = strokeWidth;
+        previewContext.beginPath();
+        previewContext.strokeStyle = setcolor;
+        previewContext.globalAlpha = opacity;
+        previewContext.moveTo(x, y);
+        previewContext.lineTo(currentX, currentY);
+        previewContext.lineTo((2 * x) - currentX, currentY);
+        previewContext.closePath();
+        previewContext.stroke();
+        flag = true;
+    }
+
+    if (event.buttons !== 1 && currentTool === "triangle" && flag) {
+        isDrawing = false;
+        drawingContext.lineWidth = strokeWidth;
+        drawingContext.strokeStyle = setcolor;
+        drawingContext.globalAlpha = opacity;
+        drawingContext.beginPath();
+        drawingContext.moveTo(x, y);
+        drawingContext.lineTo(currentX, currentY);
+        drawingContext.lineTo((2 * x) - currentX, currentY);
+        drawingContext.closePath();
+        drawingContext.stroke();
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        console.log("Triangle drawn from", x, y, "to", event.clientX, event.clientY);
+        flag = false;
+    }
+
+    if (currentTool === "rectangle" && event.buttons === 1) {
+        if (!isDrawing) {
+            x = currentX;
+            y = currentY;
+            isDrawing = true;
+        }
+
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        previewContext.lineWidth = strokeWidth;
+        previewContext.strokeStyle = setcolor;
+        previewContext.globalAlpha = opacity;
+        previewContext.strokeRect(x, y, currentX - x, currentY - y);
+        flag = true;
+    }
+
+    if (event.buttons !== 1 && currentTool === "rectangle" && flag) {
+        isDrawing = false;
+        drawingContext.lineWidth = strokeWidth;
+        drawingContext.strokeStyle = setcolor;
+        drawingContext.globalAlpha = opacity;
+        drawingContext.strokeRect(x, y, currentX - x, currentY - y);
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        console.log("Rectangle drawn from", x, y, "to", event.clientX, event.clientY);
+        flag = false;
+    }
+
+    if (currentTool === "pentagon" && event.buttons === 1) {
+        if (!isDrawing) {
+            x = currentX;
+            y = currentY;
+            isDrawing = true;
+        }
+
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        previewContext.lineWidth = strokeWidth;
+        previewContext.strokeStyle = setcolor;
+        previewContext.globalAlpha = opacity;
+        CanvasUtils.drawPentagon(previewContext, x, y, CanvasUtils.getDistance(x, y, currentX, currentY));
+        flag = true;
+    }
+
+    if (event.buttons !== 1 && currentTool === "pentagon" && flag) {
+        isDrawing = false;
+        drawingContext.strokeStyle = setcolor;
+        drawingContext.lineWidth = strokeWidth;
+        drawingContext.globalAlpha = opacity;
+        CanvasUtils.drawPentagon(drawingContext, x, y, CanvasUtils.getDistance(x, y, currentX, currentY));
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        console.log("Pentagon drawn from", x, y, "to", event.clientX, event.clientY);
+        flag = false;
+    }
+});
+canvas.addEventListener("click", (event) => {
+
+    if (currentTool === "paintBucket") {
+
+        const point = CanvasUtils.getCanvasPoint(event, canvas);
+
+        floodFill(
+            Math.floor(point.x),
+            Math.floor(point.y),
+            setcolor
+        );
+
+    }
 
 });
+
