@@ -257,7 +257,7 @@ canvas.addEventListener("mousemove", (event) => {
     if (currentTool === "magic" && event.buttons === 1) {
         if (!isDrawing) {
             x = currentX;
-            y = currentY;
+            y = currentY+27;
             isDrawing = true;
         }
         magicPoints.push({
