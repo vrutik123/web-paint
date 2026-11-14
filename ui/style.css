@@ -31,31 +31,31 @@ button {
 .app-shell {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 14px;
     min-height: 100vh;
-    padding: 18px 24px 24px;
+    padding: 12px 16px 16px;
 }
 
 .mainnavbar {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 16px;
 }
 
 .brand {
     display: inline-flex;
-    flex: 0 0 190px;
+    flex: 0 0 160px;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     color: var(--ink);
-    font-size: 1.15rem;
+    font-size: 1rem;
     font-weight: 700;
     text-decoration: none;
 }
 
 .brand img {
-    width: 52px;
-    height: 52px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     object-fit: cover;
     box-shadow: 0 4px 12px rgba(24, 23, 39, 0.15);
@@ -63,9 +63,9 @@ button {
 
 .navbar {
     flex: 1;
-    min-height: 64px;
-    padding: 8px 18px;
-    border-radius: 18px;
+    min-height: 48px;
+    padding: 4px 12px;
+    border-radius: 12px;
     background: linear-gradient(110deg, var(--ink), var(--accent-dark));
     box-shadow: var(--shadow);
 }
@@ -74,7 +74,7 @@ button {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 28px;
+    gap: 16px;
     height: 100%;
     margin: 0;
     padding: 0;
@@ -83,12 +83,43 @@ button {
 
 .settings-list li {
     display: flex;
-    min-width: 180px;
+    min-width: 140px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 4px;
     flex: 1;
+}
+
+.settings-list .history-controls {
+    min-width: 80px;
+    flex: 0 0 auto;
+    flex-direction: row;
+    gap: 4px;
+}
+
+.history-button {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.history-button:hover,
+.history-button:focus-visible {
+    background: rgba(255, 255, 255, 0.24);
+    outline: none;
+}
+
+.history-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
 }
 
 .setting-label output {
@@ -99,13 +130,13 @@ button {
 
 .color-options {
     min-width: 100px;
-    min-height: 60px;
+    min-height: 42px;
     display: flex;
-    gap: 10px;
+    gap: 6px;
     align-items: center;
     background:rgba(255, 255, 255, 0.15);
-    padding: 6px 8px;
-    border-radius: 12px;
+    padding: 4px 6px;
+    border-radius: 8px;
     transition: 800ms ease;
 }
 .color-options:hover {
@@ -113,8 +144,8 @@ button {
 }
 .color-choice {
     display: inline-grid;
-    width: 30px;
-    height: 30px;
+    width: 22px;
+    height: 22px;
     place-items: center;
     border-radius: 50%;
     cursor: pointer;
@@ -137,10 +168,10 @@ button {
 
 .stroke-options,
 .opacity-options {
-    padding:10px;
+    padding: 6px;
     min-width: 100px;   
-    min-height: 30px;
-    width: 180px;
+    min-height: 24px;
+    width: 150px;
     transition: 800ms ease;
 }
 .stroke-options:hover,
@@ -158,9 +189,9 @@ input[type="range"] {
 .setting-label {
     display: inline-flex;
     align-items: center;
-    gap: 9px;
+    gap: 6px;
     color: #ffffff;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 600;
 }
 
@@ -179,8 +210,8 @@ input[type="range"] {
 }
 .stroke-swatch {
     display: flex;
-    width: 20px;
-    height: 20px;
+    width: 17px;
+    height: 17px;
     place-items: center;
     border-radius: 50%;
     border: 2px solid #ffffff;
@@ -188,7 +219,7 @@ input[type="range"] {
 }
 .setting-icon {
     color: #ffffff;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
 }
 
 .transparency-icon {
@@ -198,9 +229,9 @@ input[type="range"] {
 }
 .workspace {
     display: grid;
-    grid-template-columns: minmax(190px, 220px) minmax(0, 1fr);
+    grid-template-columns: minmax(130px, 150px) minmax(0, 1fr);
     flex: 1;
-    gap: 18px;
+    gap: 12px;
     min-height: 0;
 }
 
@@ -214,24 +245,30 @@ input[type="range"] {
 }
 
 .toolbar {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-self: start;
+    gap: 4px;
+    max-height: calc(100vh - 24px);
+    padding: 4px;
+    position: sticky;
+    top: 12px;
+    overflow-y: auto;
 }
 
 .tool-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 6px;
 }
 
 .tool-group + .tool-group {
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
+    padding-left: 4px;
+    border-left: 1px solid var(--border);
 }
 
 .tool-group h2 {
+    display: none;
     margin: 0;
     color: var(--muted-ink);
     font-size: 0.75rem;
@@ -242,18 +279,19 @@ input[type="range"] {
 
 .tool-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
+    grid-template-columns: 1fr;
+    gap: 3px;
 }
 
 .tool button {
     display: grid;
-    width: 100%;
+    width: 44px;
     aspect-ratio: 1;
+    justify-self: center;
     place-items: center;
-    padding: 10px;
+    padding: 4px;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 8px;
     background: var(--surface-muted);
     cursor: pointer;
     transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
@@ -268,14 +306,19 @@ input[type="range"] {
 }
 
 .tool button img {
-    width: 34px;
-    height: 34px;
+    width: 20px;
+    height: 20px;
     object-fit: contain;
+}
+
+.history-icon {
+    font-size: 1.1rem;
+    line-height: 1;
 }
 
 .canvas-panel {
     min-height: 0;
-    padding: 12px;
+    padding: 8px;
 }
 
 .canvas {
@@ -329,7 +372,15 @@ input[type="range"] {
     }
 
     .toolbar {
+        grid-template-columns: 1fr;
         order: 2;
+    }
+
+    .tool-group + .tool-group {
+        padding-top: 4px;
+        padding-left: 0;
+        border-top: 1px solid var(--border);
+        border-left: 0;
     }
 
     .canvas-panel {

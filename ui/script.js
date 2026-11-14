@@ -11,6 +11,64 @@ let y = 0;
 let isDrawing = false;
 let flag = false;
 let magicPoints = [];
+const undoStack = [];
+const redoStack = [];
+const historyLimit = 30;
+const drawingTools = new Set([
+    "pencil",
+    "eraser",
+    "highlighter",
+    "magic",
+    "square",
+    "circle",
+    "triangle",
+    "rectangle",
+    "pentagon"
+]);
+
+function updateHistoryButtons() {
+    document.getElementById("undo").disabled = undoStack.length === 0;
+    document.getElementById("redo").disabled = redoStack.length === 0;
+}
+
+function saveCanvasState() {
+    undoStack.push(drawingContext.getImageData(0, 0, canvas.width, canvas.height));
+
+    if (undoStack.length > historyLimit) {
+        undoStack.shift();
+    }
+
+    redoStack.length = 0;
+    updateHistoryButtons();
+}
+
+function restoreCanvasState(imageData) {
+    drawingContext.putImageData(imageData, 0, 0);
+    CanvasUtils.clearCanvasLayer(previewCanvas);
+    isDrawing = false;
+    magicPoints = [];
+    flag = false;
+}
+
+function undoCanvas() {
+    if (undoStack.length === 0) {
+        return;
+    }
+
+    redoStack.push(drawingContext.getImageData(0, 0, canvas.width, canvas.height));
+    restoreCanvasState(undoStack.pop());
+    updateHistoryButtons();
+}
+
+function redoCanvas() {
+    if (redoStack.length === 0) {
+        return;
+    }
+
+    undoStack.push(drawingContext.getImageData(0, 0, canvas.width, canvas.height));
+    restoreCanvasState(redoStack.pop());
+    updateHistoryButtons();
+}
 
 function setActiveTool(toolName, cursorValue) {
     currentTool = toolName;
@@ -39,7 +97,10 @@ registerTool("pentagon", "pentagon", "crosshair");
 document.querySelectorAll(".color-radio").forEach((input) => {
     input.addEventListener("change", () => {
         setcolor = input.value;
-        document.getElementById("color-swatch").style.backgroundColor = setcolor;
+        const colorSwatch = document.getElementById("color-swatch");
+        if (colorSwatch) {
+            colorSwatch.style.backgroundColor = setcolor;
+        }
     });
 });
 
@@ -57,11 +118,70 @@ opacitySlider.addEventListener("input", () => {
     opacityValue.textContent = `${opacitySlider.value}%`;
 });
 
+function adjustSlider(slider, amount) {
+    const min = Number(slider.min);
+    const max = Number(slider.max);
+    const value = Number(slider.value) + amount;
+    slider.value = String(Math.min(max, Math.max(min, value)));
+    slider.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function navigateColor(direction) {
+    const colors = Array.from(document.querySelectorAll(".color-radio"));
+    const currentIndex = colors.findIndex((color) => color.checked);
+
+    if (currentIndex === -1) {
+        return;
+    }
+
+    const nextIndex = (currentIndex + direction + colors.length) % colors.length;
+    colors[nextIndex].checked = true;
+    colors[nextIndex].dispatchEvent(new Event("change", { bubbles: true }));
+}
+
 const trash = document.getElementById("trash");
 trash.addEventListener("click", () => {
+    saveCanvasState();
     CanvasUtils.clearCanvasLayer(canvas);
     isDrawing = false;
 });
+
+document.getElementById("undo").addEventListener("click", undoCanvas);
+document.getElementById("redo").addEventListener("click", redoCanvas);
+updateHistoryButtons();
+
+document.addEventListener("keydown", (event) => {
+    const key = event.key.toLowerCase();
+    const isPlus = event.key === "+" || event.key === "=";
+    const isMinus = event.key === "-" || event.key === "_";
+
+    if (currentTool && event.ctrlKey && (isPlus || isMinus)) {
+        event.preventDefault();
+        adjustSlider(opacitySlider, isPlus ? 1 : -1);
+        return;
+    }
+
+    if (currentTool && !event.ctrlKey && (isPlus || isMinus)) {
+        event.preventDefault();
+        adjustSlider(widthSlider, isPlus ? 1 : -1);
+        return;
+    }
+
+    if (currentTool && !event.ctrlKey && (key === "arrowleft" || key === "arrowright")) {
+        event.preventDefault();
+        navigateColor(key === "arrowright" ? 1 : -1);
+        return;
+    }
+
+    if (event.ctrlKey && key === "z") {
+        event.preventDefault();
+        undoCanvas();
+    } else if (event.ctrlKey && key === "y") {
+        event.preventDefault();
+        redoCanvas();
+    }
+});
+
 function floodFill(startX, startY, color) {
 
     const imageData = drawingContext.getImageData(
@@ -229,6 +349,10 @@ canvas.addEventListener("mousemove", (event) => {
     const currentX = point.x;
     const currentY = point.y;
 
+    if (event.buttons === 1 && !isDrawing && drawingTools.has(currentTool)) {
+        saveCanvasState();
+    }
+
     if (currentTool === "pencil" && event.buttons === 1) {
         if (!isDrawing) {
             x = currentX;
@@ -303,6 +427,7 @@ canvas.addEventListener("mousemove", (event) => {
     }
 
     if (currentTool === "eraser" && event.buttons === 1) {
+        isDrawing = true;
         drawingContext.clearRect(currentX - strokeWidth, currentY - strokeWidth, strokeWidth * 2, strokeWidth * 2);
     }
 
@@ -484,6 +609,7 @@ canvas.addEventListener("click", (event) => {
 
         const point = CanvasUtils.getCanvasPoint(event, canvas);
 
+        saveCanvasState();
         floodFill(
             Math.floor(point.x),
             Math.floor(point.y),
