@@ -11,12 +11,15 @@ let y = 0;
 let isDrawing = false;
 let flag = false;
 let magicPoints = [];
+let loopPoints = [];
 const undoStack = [];
 const redoStack = [];
 const historyLimit = 30;
+const toolSettings = new Map();
 const drawingTools = new Set([
     "pencil",
     "eraser",
+    "areaEraser",
     "highlighter",
     "magic",
     "square",
@@ -25,6 +28,87 @@ const drawingTools = new Set([
     "rectangle",
     "pentagon"
 ]);
+const configurableTools = new Set([
+    "pencil",
+    "highlighter",
+    "magic",
+    "paintBucket",
+    "square",
+    "circle",
+    "triangle",
+    "rectangle",
+    "pentagon"
+]);
+
+configurableTools.forEach((toolName) => {
+    toolSettings.set(toolName, {
+        color: setcolor,
+        width: strokeWidth,
+        opacity
+    });
+});
+
+function isConfigurableTool(toolName) {
+    return configurableTools.has(toolName);
+}
+
+function saveCurrentToolSettings() {
+    if (isConfigurableTool(currentTool)) {
+        toolSettings.set(currentTool, {
+            color: setcolor,
+            width: strokeWidth,
+            opacity
+        });
+    }
+}
+
+function getOpacityLimits(toolName) {
+    if (toolName === "pencil") {
+        return { min: 50, max: 100 };
+    }
+
+    if (toolName === "highlighter") {
+        return { min: 0, max: 50 };
+    }
+
+    return { min: 0, max: 100 };
+}
+
+function clampOpacity(value, toolName) {
+    const limits = getOpacityLimits(toolName);
+    return Math.min(limits.max, Math.max(limits.min, value));
+}
+
+function updateSettingsControls() {
+    const selectedColor = document.querySelector(
+        `.color-radio[value="${setcolor}"]`
+    );
+    const opacityLimits = getOpacityLimits(currentTool);
+
+    if (selectedColor) {
+        selectedColor.checked = true;
+    }
+
+    widthSlider.value = String(strokeWidth);
+    widthValue.textContent = `${strokeWidth} px`;
+    opacitySlider.min = String(opacityLimits.min);
+    opacitySlider.max = String(opacityLimits.max);
+    opacitySlider.value = String(opacity * 100);
+    opacityValue.textContent = `${opacity * 100}%`;
+}
+
+function loadToolSettings(toolName) {
+    if (!isConfigurableTool(toolName)) {
+        return;
+    }
+
+    const settings = toolSettings.get(toolName);
+    setcolor = settings.color;
+    strokeWidth = settings.width;
+    opacity = clampOpacity(settings.opacity * 100, toolName) / 100;
+    updateSettingsControls();
+    saveCurrentToolSettings();
+}
 
 function updateHistoryButtons() {
     document.getElementById("undo").disabled = undoStack.length === 0;
@@ -47,6 +131,7 @@ function restoreCanvasState(imageData) {
     CanvasUtils.clearCanvasLayer(previewCanvas);
     isDrawing = false;
     magicPoints = [];
+    loopPoints = [];
     flag = false;
 }
 
@@ -71,9 +156,13 @@ function redoCanvas() {
 }
 
 function setActiveTool(toolName, cursorValue) {
+    saveCurrentToolSettings();
     currentTool = toolName;
+    loadToolSettings(toolName);
     document.body.style.cursor = cursorValue;
     isDrawing = false;
+    loopPoints = [];
+    CanvasUtils.clearCanvasLayer(previewCanvas);
 }
 
 function registerTool(toolId, toolName, cursorValue) {
@@ -85,6 +174,7 @@ function registerTool(toolId, toolName, cursorValue) {
 
 registerTool("pencil", "pencil", "url(https://vrutik123.github.io/web-paint/resources/pencil.png), auto");
 registerTool("eraser", "eraser", "url(https://vrutik123.github.io/web-paint/resources/eraser.png), auto");
+registerTool("area-eraser", "areaEraser", "url(https://vrutik123.github.io/web-paint/resources/pointer.png), auto");
 registerTool("paint-bucket", "paintBucket", "url(https://vrutik123.github.io/web-paint/resources/paint-bucket.png), auto");
 registerTool("highlighter", "highlighter", "url(https://vrutik123.github.io/web-paint/resources/highlighter.png), auto");
 registerTool("magic", "magic", "url(https://vrutik123.github.io/web-paint/resources/megical_pencil.png), auto");
@@ -97,6 +187,7 @@ registerTool("pentagon", "pentagon", "crosshair");
 document.querySelectorAll(".color-radio").forEach((input) => {
     input.addEventListener("change", () => {
         setcolor = input.value;
+        saveCurrentToolSettings();
         const colorSwatch = document.getElementById("color-swatch");
         if (colorSwatch) {
             colorSwatch.style.backgroundColor = setcolor;
@@ -109,13 +200,20 @@ const widthValue = document.getElementById("width-value");
 widthSlider.addEventListener("input", () => {
     strokeWidth = Number(widthSlider.value);
     widthValue.textContent = `${strokeWidth} px`;
+    saveCurrentToolSettings();
 });
 
 const opacitySlider = document.getElementById("opacity-slider");
 const opacityValue = document.getElementById("opacity-value");
 opacitySlider.addEventListener("input", () => {
-    opacity = Number(opacitySlider.value) / 100;
+    const opacityPercent = clampOpacity(
+        Number(opacitySlider.value),
+        currentTool
+    );
+    opacity = opacityPercent / 100;
+    opacitySlider.value = String(opacityPercent);
     opacityValue.textContent = `${opacitySlider.value}%`;
+    saveCurrentToolSettings();
 });
 
 function adjustSlider(slider, amount) {
@@ -373,6 +471,50 @@ canvas.addEventListener("mousemove", (event) => {
         x = currentX;
         y = currentY + 27;
         drawingContext.stroke();
+    }
+
+    if (currentTool === "areaEraser" && event.buttons === 1) {
+        if (!isDrawing) {
+            loopPoints = [];
+            isDrawing = true;
+        }
+
+        loopPoints.push({ x: currentX, y: currentY });
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        previewContext.beginPath();
+        previewContext.strokeStyle = "#555555";
+        previewContext.lineWidth = 2;
+        previewContext.globalAlpha = 0.8;
+        previewContext.lineCap = "round";
+        previewContext.lineJoin = "round";
+        previewContext.moveTo(loopPoints[0].x, loopPoints[0].y);
+
+        loopPoints.slice(1).forEach((point) => {
+            previewContext.lineTo(point.x, point.y);
+        });
+
+        previewContext.stroke();
+    }
+
+    if (event.buttons !== 1 && currentTool === "areaEraser") {
+        if (loopPoints.length >= 3) {
+            drawingContext.save();
+            drawingContext.globalCompositeOperation = "destination-out";
+            drawingContext.beginPath();
+            drawingContext.moveTo(loopPoints[0].x, loopPoints[0].y);
+
+            loopPoints.slice(1).forEach((point) => {
+                drawingContext.lineTo(point.x, point.y);
+            });
+
+            drawingContext.closePath();
+            drawingContext.fill();
+            drawingContext.restore();
+        }
+
+        CanvasUtils.clearCanvasLayer(previewCanvas);
+        loopPoints = [];
+        isDrawing = false;
     }
 
     if (event.buttons !== 1) {
